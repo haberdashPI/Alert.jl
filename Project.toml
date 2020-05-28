@@ -3,5 +3,9 @@ uuid = "28312eec-4d86-447d-83ad-bc2b262de792"
 authors = ["David Little <david.frank.little@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+
 [compat]
+PyCall = "1"
 julia = "1"
