@@ -27,13 +27,13 @@ function alert(message="Done!")
     @static if Sys.isapple()
         run(`osascript -e 'display notification "'$message'" with title "Julia"'`)
     elseif Sys.islinux()
-        if !isempty(Sys.which("notify-send"))
+        if !isnothing(Sys.which("notify-send"))
             run(`notify-send $message`)
-        elseif !isempty(Sys.which("zenity"))
+        elseif !isnothing(Sys.which("zenity"))
             run(pipeline(`echo $message`,`zenity --notification --listen`))
-        elseif !isempty(Sys.which("kdialog"))
+        elseif !isnothing(Sys.which("kdialog"))
             run(`kdialog --title "Julia" --passivepopup $message 10`,wait=false)
-        elseif !isempty(Sys.which("xmessage"))
+        elseif !isnothing(Sys.which("xmessage"))
             run(`xmessage $message`)
         else
             @info "Trying to send message: $message."
@@ -41,7 +41,8 @@ function alert(message="Done!")
                    " 'notify-send', 'zenity', 'kdialog' or 'xmessage'.")
         end
     elseif Sys.iswindows()
-        wintoast.ToastNotifier().show_toast("Julia",message)
+        wintoast.ToastNotifier().show_toast("Julia",message,
+            icon_path=joinpath(@__DIR__,"..","images","julia.ico"))
     else
         @info "Trying to send message: $message."
         @error "Unsupported operating system."
