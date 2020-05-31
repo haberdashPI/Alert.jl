@@ -1,13 +1,5 @@
 module Alert
 
-@static if Sys.iswindows()
-    using PyCall
-    const wintoast = PyNULL()
-    function __init__()
-        copy!(wintoast, pyimport_conda("win10toast","win10toast","conda-forge"))
-    end
-end
-
 export alert
 
 """
@@ -41,11 +33,38 @@ function alert(message="Done!")
                    " 'notify-send', 'zenity', 'kdialog' or 'xmessage'.")
         end
     elseif Sys.iswindows()
-        wintoast.ToastNotifier().show_toast("Julia",message,
-            icon_path=joinpath(@__DIR__,"..","images","julia.ico"))
+        win_toast("Julia", message)
     else
         @info "Trying to send message: $message."
         @error "Unsupported operating system."
+    end
+end
+
+function win_toast(title, content)
+    posh_script = """
+    [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
+
+    \$Template = [Windows.UI.Notifications.ToastTemplateType]::ToastImageAndText01
+    [xml]\$ToastTemplate = ([Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent(\$Template).GetXml())
+    [xml]\$ToastTemplate = @"
+    <toast launch="app-defined-string">
+        <visual>
+            <binding template="ToastGeneric">
+                <text>$(title)</text>
+                <text>$(content)</text>
+            </binding>
+        </visual>
+    </toast>
+    "@
+    \$ToastXml = New-Object -TypeName Windows.Data.Xml.Dom.XmlDocument
+    \$ToastXml.LoadXml(\$ToastTemplate.OuterXml)
+
+    \$app = '$(joinpath(Sys.BINDIR,"julia.exe"))'
+    \$notify = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier(\$app)
+    \$notify.Show(\$ToastXml)
+    """
+    open(`powershell.exe -Command -`, "w") do io
+        println(io, posh_script)
     end
 end
 
