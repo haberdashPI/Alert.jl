@@ -1,6 +1,38 @@
 module Alert
+using Dates
 
-export alert
+export alert, @alert
+
+"""
+    @alert [duration] [message] begin
+        [body]
+    end
+
+Calls [`alert`](@ref) if `body` takes longer than
+`duration` (default to 2.0) seconds to complete.
+"""
+macro alert(args...)
+    if length(args) == 0
+        error("Missing body for @alert macro.")
+    end
+    options = args[1:end-1]
+    body = args[end]
+
+    return quote
+        start_time = Dates.now()
+        $(esc(body))
+        delay, msg = Alert.__at_alert_options__($options...)
+        if (Dates.now() - start_time) > Dates.Millisecond(round(Int,1000delay))
+            alert(msg)
+        end
+    end
+end
+
+__at_alert_options__() = 2.0, "Done!"
+__at_alert_options__(str::AbstractString) = 2.0, str
+__at_alert_options__(num::Number) = num, "Done!"
+__at_alert_options__(str::AbstractString,num::Number) = num, str
+__at_alert_options__(num::Number,str::AbstractString) = num, str
 
 """
 
