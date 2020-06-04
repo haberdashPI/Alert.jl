@@ -23,9 +23,10 @@ an appropriate program installed to display the notification. If it doesn't
 work, just read the error message that is displayed to see what program you need
 to install.
 
-The package also provides `@alert` which can be used to notify you when a block
-of code has finished, if it takes longer than 2 seconds (or any custom value).
-This is especially handy when using `ProgressMeter`, like so.
+The package also provides `@alert`, which can be used to notify you when a block
+of code has finished. It only displays a message if the code runs for longer
+than 2 seconds (or a custom value). This is especially handy when using
+`ProgressMeter`, like so.
 
 ```julia
 @alert @showprogress for i in 1:10_000
