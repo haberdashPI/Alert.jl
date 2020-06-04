@@ -9,7 +9,7 @@ export alert
 Display a cross-platform notification.
 
 On MacOS, displays a notification window. On linux, tries to use notify-send,
-zenity, kdialog or xmessage, in that order. On windows, uses a toast
+zenity, kdialog or xmessage, in that order. On Windows, uses a toast
 notification.
 
 Other platforms are not yet supported.
