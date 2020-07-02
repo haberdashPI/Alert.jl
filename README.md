@@ -1,7 +1,7 @@
 # Alert
 
 Alert provides a cross-platform means of displaying a notification to the user
-in Julia. It should work on MacOS, Windows 10 or Linux. This is handy for
+in Julia. It should work on MacOS, Windows 10 (even under WSL2) or Linux. This is handy for
 long-running scripts; just add `alert()` to the end of the script, and go work
 on something else until you see the notification. To use it just run `alert`,
 like so.
@@ -26,7 +26,7 @@ to install.
 The package also provides `@alert`, which can be used to notify you when a block
 of code has finished. It only displays a message if the code runs for longer
 than 2 seconds (or a custom value). This is especially handy when using
-`ProgressMeter`, like so.
+[`ProgressMeter`](https://github.com/timholy/ProgressMeter.jl), like so.
 
 ```julia
 @alert @showprogress for i in 1:10_000

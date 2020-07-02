@@ -1,4 +1,5 @@
 module Alert
+using Base64
 using Dates
 
 export alert, @alert
@@ -34,6 +35,16 @@ __at_alert_options__(num::Number) = num, "Done!"
 __at_alert_options__(str::AbstractString,num::Number) = num, str
 __at_alert_options__(num::Number,str::AbstractString) = num, str
 
+# determine if the current system is Linux under WSL
+function iswsl()
+    try
+        v = read("/proc/version", String)
+        return occursin(r"microsoft",v)
+    catch
+        return false
+    end
+end
+
 """
 
     alert(message="Done!")
@@ -41,7 +52,7 @@ __at_alert_options__(num::Number,str::AbstractString) = num, str
 Display a cross-platform notification.
 
 On MacOS, displays a notification window. On linux, tries to use notify-send,
-zenity, kdialog or xmessage, in that order. On Windows, uses a toast
+zenity, kdialog or xmessage, in that order. On Windows or WSL2, uses a toast
 notification.
 
 Other platforms are not yet supported.
@@ -51,7 +62,9 @@ function alert(message="Done!")
     @static if Sys.isapple()
         run(`osascript -e 'display notification "'$message'" with title "Julia"'`)
     elseif Sys.islinux()
-        if !isnothing(Sys.which("notify-send"))
+        if iswsl()
+            win_toast(message)
+        elseif !isnothing(Sys.which("notify-send"))
             run(`notify-send $message`)
         elseif !isnothing(Sys.which("zenity"))
             run(pipeline(`echo $message`,`zenity --notification --listen`))
@@ -65,39 +78,55 @@ function alert(message="Done!")
                    " 'notify-send', 'zenity', 'kdialog' or 'xmessage'.")
         end
     elseif Sys.iswindows()
-        win_toast("Julia", message)
+        win_toast(message)
     else
         @info "Trying to send message: $message."
         @error "Unsupported operating system."
     end
 end
 
-function win_toast(title, content)
+function win_toast(content)
+    # format script input
+    io = IOBuffer()
+    show(io, content)
+    disp_content = String(take!(io))
+
+    # create a powershell script
     posh_script = """
-    [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
+    \$ErrorActionPreference = "Stop"
 
-    \$Template = [Windows.UI.Notifications.ToastTemplateType]::ToastImageAndText01
-    [xml]\$ToastTemplate = ([Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent(\$Template).GetXml())
-    [xml]\$ToastTemplate = @"
-    <toast launch="app-defined-string">
-        <visual>
-            <binding template="ToastGeneric">
-                <text>$(title)</text>
-                <text>$(content)</text>
-            </binding>
-        </visual>
-    </toast>
-    "@
-    \$ToastXml = New-Object -TypeName Windows.Data.Xml.Dom.XmlDocument
-    \$ToastXml.LoadXml(\$ToastTemplate.OuterXml)
+    \$notificationTitle = $disp_content
 
-    \$app = '$(joinpath(Sys.BINDIR,"julia.exe"))'
-    \$notify = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier(\$app)
-    \$notify.Show(\$ToastXml)
+    [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > \$null
+    \$template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText01)
+
+    #Convert to .NET type for XML manipuration
+    \$toastXml = [xml] \$template.GetXml()
+    \$toastXml.GetElementsByTagName("text").AppendChild(\$toastXml.CreateTextNode(\$notificationTitle)) > \$null
+
+    #Convert back to WinRT type
+    \$xml = New-Object Windows.Data.Xml.Dom.XmlDocument
+    \$xml.LoadXml(\$toastXml.OuterXml)
+
+    \$toast = [Windows.UI.Notifications.ToastNotification]::new(\$xml)
+    \$toast.Tag = "PowerShell"
+    \$toast.Group = "PowerShell"
+    \$toast.ExpirationTime = [DateTimeOffset]::Now.AddMinutes(5)
+    #\$toast.SuppressPopup = \$true
+
+    \$notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("PowerShell")
+    \$notifier.Show(\$toast);
     """
-    open(`powershell.exe -Command -`, "w") do io
-        println(io, posh_script)
-    end
+
+    # encode as Base64 of Unicode-16
+    io = IOBuffer()
+    encode = Base64EncodePipe(io)
+    write(encode, transcode(UInt16, posh_script))
+    close(encode)
+    str = String(take!(io))
+
+    # send to powershell (works on windows and WSL2)
+    run(`powershell.exe -Enc $str`)
 end
 
 end
