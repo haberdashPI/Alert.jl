@@ -1,8 +1,46 @@
 module Alert
 using Base64
 using Dates
+using Printf
+using REPL
 
-export alert, @alert
+export alertREPL, alert, @alert
+
+function __init__()
+    if VERSION >= v"1.5"
+        pushfirst!(REPL.repl_ast_transforms, with_repl_alert)
+    end
+end
+
+const repl_alert_options = Ref((Inf,"Done!"))
+function with_repl_alert(ex)
+    if !isinf(repl_alert_options[][1])
+        Expr(:toplevel, quote 
+            @alert $(repl_alert_options[][1]) $(repl_alert_options[][2]) $ex
+        end)
+    else
+        ex
+    end
+end
+
+"""
+    alertREPL([duration=2.0], [message="Done!"])
+
+Wraps all code passed to the REPL in an `@alert` macro with the given arguments. Hence,
+if anything you run in the REPL takes longer than `duration` seconds, an alert notification
+will be displayed. You can set the duration to `Inf` to turn off the notification.
+"""
+function alertREPL(args...)
+    repl_alert_options[] = __at_alert_options__(args...)
+    dur = repl_alert_options[][1]
+    if !isinf(dur)
+        secs = @sprintf("%1.2f s", repl_alert_options[][1])
+        @info "Alert will be sent if REPL line takes longer than $secs to complete. See "*
+            "documentation for `Alert.alertREPL`"
+    else
+        @info "REPL alerts have been turned off."
+    end
+end
 
 """
     @alert [duration] [message] begin
@@ -17,23 +55,25 @@ macro alert(args...)
         error("Missing body for @alert macro.")
     end
     options = args[1:end-1]
-    body = args[end]
+    body = args[end]    
 
     return quote
         start_time = Dates.now()
-        $(esc(body))
+        result = $(esc(body))
         delay, msg = Alert.__at_alert_options__($options...)
-        if (Dates.now() - start_time) > Dates.Millisecond(round(Int,1000delay))
+        if !isinf(delay) && (Dates.now() - start_time) > Dates.Millisecond(round(Int,1000delay))
             alert(msg)
         end
+
+        result
     end
 end
 
 __at_alert_options__() = 2.0, "Done!"
 __at_alert_options__(str::AbstractString) = 2.0, str
-__at_alert_options__(num::Number) = num, "Done!"
-__at_alert_options__(str::AbstractString,num::Number) = num, str
-__at_alert_options__(num::Number,str::AbstractString) = num, str
+__at_alert_options__(num::Number) = convert(Float64,num), "Done!"
+__at_alert_options__(str::AbstractString,num::Number) = convert(Float64,num), str
+__at_alert_options__(num::Number,str::AbstractString) = convert(Float64,num), str
 
 # determine if the current system is Linux under WSL
 function iswsl()
