@@ -60,3 +60,12 @@ catch e
     @warn e.msg
 end
 ```
+
+## Common Issues
+
+If you do not receive a notification on Windows. Please ensure you have Notifications turned on in "Notifications & actions"
+
+See
+
+![](https://aws1.discourse-cdn.com/business5/uploads/julialang/optimized/3X/b/5/b55776f64fa7dae966a3773bca40e3627a1a480b_2_960x750.png)
+
