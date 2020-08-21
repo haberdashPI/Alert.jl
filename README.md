@@ -16,6 +16,16 @@ an appropriate program installed to display the notification. If it doesn't
 work, just read the error message that is displayed to see what program you need
 to install.
 
+Table of Contents:
+<!-- TOC -->
+
+- [The alert function](#the-alert-function)
+- [The @alert macro](#the-alert-macro)
+- [The REPL hook](#the-repl-hook)
+- [Troubleshooting](#troubleshooting)
+
+<!-- /TOC -->
+
 ## The `alert()` function
 
 To use `alert()` just add it to some long-running code.
@@ -60,3 +70,9 @@ catch e
     @warn e.msg
 end
 ```
+
+## Troubleshooting
+
+
+- **Notification fails to display on Windows**: check to make sure you have Notifications turned on in "Notifications & actions" in your OS settings. ![Window of the Windows 10 "Notifications & actions"](https://aws1.discourse-cdn.com/business5/uploads/julialang/optimized/3X/b/5/b55776f64fa7dae966a3773bca40e3627a1a480b_2_960x750.png)
+
