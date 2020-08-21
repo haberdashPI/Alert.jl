@@ -63,7 +63,7 @@ end
 
 ## Common Issues
 
-If you do not receive a notification on Windows. Please ensure you have Notifications turned on in "Notifications & actions"
+If you do not receive a notification on Windows, please ensure you have Notifications turned on in "Notifications & actions"
 
 See
 
