@@ -18,7 +18,7 @@ If you wish to revert to the default backend, call this mehtod with no arguments
 
 """
 set_alert_backend!(fn::Function) = alert_backend[] = fn
-set_alert_backend!() = alert_backend[] = default_backend
+set_alert_backend!() = alert_backend[] = default_backend[]
 
 export alertREPL, alert, @alert
 
