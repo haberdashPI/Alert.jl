@@ -81,7 +81,7 @@ end
 # Windows specific methods: `win_toast` and `iswsl`
 # -----------------------------------------------------------------
 
-@static if Sys.iswindows()
+@static if Sys.iswindows() || Sys.islinux()
 
     # determine if the current system is Linux under WSL
     function iswsl()
