@@ -23,6 +23,7 @@ Table of Contents:
 - [The @alert macro](#the-alert-macro)
 - [The REPL hook](#the-repl-hook)
 - [Troubleshooting](#troubleshooting)
+- [Extensions](#extensions)
 
 <!-- /TOC -->
 
@@ -73,6 +74,8 @@ end
 
 ## Troubleshooting
 
-
 - **Notification fails to display on Windows**: check to make sure you have Notifications turned on in "Notifications & actions" in your OS settings. ![Window of the Windows 10 "Notifications & actions"](https://aws1.discourse-cdn.com/business5/uploads/julialang/optimized/3X/b/5/b55776f64fa7dae966a3773bca40e3627a1a480b_2_960x750.png)
 
+## Extensions
+
+If you want to use `alert` on a server, where you can't get local UX notifications, you can use [AlertPushover](https://github.com/haberdashPI/AlertPushover.jl)
