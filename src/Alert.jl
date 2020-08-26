@@ -4,18 +4,61 @@ using Dates
 using Printf
 using REPL
 
+const default_backend = Ref{Function}()
+const alert_backend = Ref{Function}()
+"""
+
+    set_alert_backend!(fn)
+
+Defines a custom backend for how `alert` sends messages to the user.
+The arugment should be a function of one arugment (a string) which displays
+the message to the user via some native UX api call.
+
+If you wish to revert to the default backend, call this mehtod with no arguments.
+
+"""
+set_alert_backend!(fn::Function) = alert_backend[] = fn
+set_alert_backend!() = alert_backend[] = default_backend
+
 export alertREPL, alert, @alert
 
 function __init__()
     if VERSION >= v"1.5"
         pushfirst!(REPL.repl_ast_transforms, with_repl_alert)
     end
+
+    default_backend[] = if Sys.isapple()
+        message -> run(`osascript -e 'display notification "'$message'" with title "Julia"'`)
+    elseif Sys.islinux()
+        if iswsl()
+            win_toast
+        elseif !isnothing(Sys.which("notify-send"))
+            message -> run(`notify-send $message`)
+        elseif !isnothing(Sys.which("zenity"))
+            message -> run(pipeline(`echo $message`,`zenity --notification --listen`))
+        elseif !isnothing(Sys.which("kdialog"))
+            message -> run(`kdialog --title "Julia" --passivepopup $message 10`,wait=false)
+        elseif !isnothing(Sys.which("xmessage"))
+            message -> run(`xmessage $message`)
+        else
+            @error("There is no program for displaying notifications available, install"*
+                " 'notify-send', 'zenity', 'kdialog' or 'xmessage'; otherwise, messages "*
+                "sent by `alert` will not display.")
+        end
+    elseif Sys.iswindows()
+        win_toast
+    else
+        @error "Unsupported operating system, no messages sent by `alert` will be "*
+            "displayed. Consider using `AlertPushover`."
+    end
+
+    alert_backend[] = default_backend[]
 end
 
 const repl_alert_options = Ref((Inf,"Done!"))
 function with_repl_alert(ex)
     if !isinf(repl_alert_options[][1])
-        Expr(:toplevel, quote 
+        Expr(:toplevel, quote
             @alert $(repl_alert_options[][1]) $(repl_alert_options[][2]) $ex
         end)
     else
@@ -55,7 +98,7 @@ macro alert(args...)
         error("Missing body for @alert macro.")
     end
     options = args[1:end-1]
-    body = args[end]    
+    body = args[end]
 
     return quote
         start_time = Dates.now()
@@ -98,32 +141,7 @@ notification.
 Other platforms are not yet supported.
 
 """
-function alert(message="Done!")
-    @static if Sys.isapple()
-        run(`osascript -e 'display notification "'$message'" with title "Julia"'`)
-    elseif Sys.islinux()
-        if iswsl()
-            win_toast(message)
-        elseif !isnothing(Sys.which("notify-send"))
-            run(`notify-send $message`)
-        elseif !isnothing(Sys.which("zenity"))
-            run(pipeline(`echo $message`,`zenity --notification --listen`))
-        elseif !isnothing(Sys.which("kdialog"))
-            run(`kdialog --title "Julia" --passivepopup $message 10`,wait=false)
-        elseif !isnothing(Sys.which("xmessage"))
-            run(`xmessage $message`)
-        else
-            @info "Trying to send message: $message."
-            @error("No program for displaying notifications available, install",
-                   " 'notify-send', 'zenity', 'kdialog' or 'xmessage'.")
-        end
-    elseif Sys.iswindows()
-        win_toast(message)
-    else
-        @info "Trying to send message: $message."
-        @error "Unsupported operating system."
-    end
-end
+alert(message="Done!") = alert_backend[](message)
 
 function win_toast(content)
     # format script input
@@ -168,5 +186,7 @@ function win_toast(content)
     # send to powershell (works on windows and WSL2)
     run(`powershell.exe -Enc $str`)
 end
+
+
 
 end
