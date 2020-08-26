@@ -4,7 +4,7 @@ using Dates
 using Printf
 using REPL
 
-export alertREPL, alert, @alert, set_alert_backend!
+export alertREPL, alert, @alert
 
 function __init__()
     init_alert_backends()
@@ -25,6 +25,8 @@ zenity, kdialog or xmessage, in that order. On Windows or WSL2, uses a toast
 notification.
 
 Other platforms are not yet supported.
+
+You can customize this function using [`set_alert_backend!`](@ref).
 
 """
 alert(message="Done!") = alert_backend[](message)
