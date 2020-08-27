@@ -67,12 +67,16 @@ function init_alert_backends()
             @error("There is no program for displaying notifications available, install"*
                 " 'notify-send', 'zenity', 'kdialog' or 'xmessage'; otherwise, messages "*
                 "sent by `alert` will not display.")
+            message -> error("No alert backend installed! "*
+                "Reload julia and read your error messages.")
         end
     elseif Sys.iswindows()
         win_toast
     else
         @error "Unsupported operating system, no messages sent by `alert` will be "*
             "displayed. Consider using `AlertPushover`."
+        message -> error("No alert backend installed! "*
+            "Reload julia and read your error messages.")
     end
 
     alert_backend[] = default_backend[]
