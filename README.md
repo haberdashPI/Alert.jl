@@ -2,7 +2,9 @@
 
 Alert provides a cross-platform means of displaying a notification to the user in Julia. It
 should work on MacOS, Windows 10 (even under WSL2) and many flavors of Linux. This is handy
-for long-running scripts.
+for long-running scripts. You can also use an extension
+([AlertPushover](https://github.com/haberdashPI/AlertPushover.jl)) to send notifications to
+your phone or a webapp when working remotely.
 
 There are three ways to use alert:
 
@@ -10,11 +12,11 @@ There are three ways to use alert:
 2. Put long-running code inside the `@alert` macro.
 3. Call `alertREPL` and any long-running code sent to the REPL will display a notification.
 
-Before using `alert()` at the end of a long-running script, it would be good to
-test that it actually works on your system: some linux distros may not have
-an appropriate program installed to display the notification. If it doesn't
-work, just read the error message that is displayed to see what program you need
-to install.
+Before using `alert()` at the end of a long-running script, it would be good to test that it
+actually works on your system: some linux distros may not have an appropriate program
+installed to display the notification. Loading `Alert` should warn you if it can't find an
+appropriate executable to send the notification. Just read the error message that is
+displayed to see what program you need to install.
 
 Table of Contents:
 <!-- TOC -->
