@@ -78,4 +78,5 @@ end
 
 ## Extensions
 
-If you want to use `alert` on a server, where you can't get local UX notifications, you can use [AlertPushover](https://github.com/haberdashPI/AlertPushover.jl)
+If you want to use `alert` remotely or in an online IDE, where you can't get local UX
+notifications, you can use [AlertPushover](https://github.com/haberdashPI/AlertPushover.jl).
