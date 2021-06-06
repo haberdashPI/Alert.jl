@@ -36,10 +36,10 @@ alert(message="Done!") = alert_backend[](message)
     set_alert_backend!(fn)
 
 Defines a custom backend for how `alert` sends messages to the user.
-The arugment should be a function of one arugment (a string) which displays
+The argument should be a function of one argument (a string) which displays
 the message to the user via some native UX api call.
 
-If you wish to revert to the default backend, call this mehtod with no arguments.
+If you wish to revert to the default backend, call this method with no arguments.
 
 """
 set_alert_backend!(fn::Function) = alert_backend[] = fn
