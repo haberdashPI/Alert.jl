@@ -64,11 +64,9 @@ function init_alert_backends()
         elseif !isnothing(Sys.which("xmessage"))
             message -> run(`xmessage $message`)
         else
-            @error("There is no program for displaying notifications available, install"*
-                " 'notify-send', 'zenity', 'kdialog' or 'xmessage'; otherwise, messages "*
-                "sent by `alert` will not display.")
-            message -> error("No alert backend installed! "*
-                "Reload julia and read your error messages.")
+            @warn("The `alert` method has no available local backend (call `alert()` for details).")
+            message -> error("No viable messaging program available, install"*
+            " 'notify-send', 'zenity', 'kdialog' or 'xmessage'.")
         end
     elseif Sys.iswindows()
         win_toast
