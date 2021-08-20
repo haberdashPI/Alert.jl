@@ -1,8 +1,7 @@
 # Alert
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Build Status](https://github.com/haberdashPi/Alert.jl/workflows/ci/badge.svg)](https://github.com/haberdashPI/Alert.jl/actions?query=workflow%3A%22CI%22+branch%3Amaster)
-
+[![Build Status](https://github.com/haberdashPi/Alert.jl/workflows/ci/badge.svg)](https://github.com/haberdashPI/Alert.jl/actions?query=workflow%3A%22CI%22+branch%3Amain)
 
 Alert provides a cross-platform means of displaying a notification to the user in Julia. It
 should work on MacOS, Windows 10 (even under WSL2) and many flavors of Linux. This is handy
