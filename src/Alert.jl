@@ -4,12 +4,13 @@ using Dates
 using Logging
 using Printf
 using REPL
+using MacroTools
 
-export alertREPL, alert, @alert
+export alert_REPL!, alert, @alert
 
 function __init__()
     init_alert_backends()
-    init_alertREPL()
+    init_alert_REPL!()
 end
 
 # `alert` implementation
@@ -147,52 +148,99 @@ end # if Sys.iswindows()
 # =================================================================
 
 """
-    @alert [duration] [message] begin
-        [body]
-    end
+    @alert [duration=2.0] [message="Done!"] [onerror=true] [body...]
 
-Calls [`alert`](@ref) if `body` takes longer than
-`duration` (default to 2.0) seconds to complete.
+Calls [`alert`](@ref) if `body` takes longer than `duration` (default to 2.0)
+seconds to complete; Posts the alert even if `body` throws an exception so long
+as `onerror=true`. 
+
+Settings (e.g. `duration`) are specified as keyword arguments.
+
+> NOTE: when `onerror=true` the body is run in a `try/catch` block, meaning
+any variables you define inside `@alert` are local. 
 """
 macro alert(args...)
     if length(args) == 0
         error("Missing body for @alert macro.")
     end
-    options = args[1:end-1]
-    body = args[end]
+    options, body = parse_alert_args(args)
+    options = NamedTuple(options)
 
-    return quote
-        start_time = Dates.now()
-        result = $(esc(body))
-        delay, msg = Alert.__at_alert_options__($options...)
-        if !isinf(delay) && (Dates.now() - start_time) > Dates.Millisecond(round(Int,1000delay))
-            alert(msg)
+    if get(options, :onerror, true)
+        return quote
+            start_time = Dates.now()
+            result = nothing
+            try 
+                result = begin 
+                    $(esc(body))
+                end
+            finally
+                delay, msg = Alert.__at_alert_options__(;$options...)
+                if !isinf(delay) && (Dates.now() - start_time) >= Dates.Millisecond(round(Int,1000delay))
+                    alert(msg)
+                end
+            end
+            
+            result
         end
+    else
+        return quote
+            start_time = Dates.now()
+            result = nothing
+            result = begin 
+                $(esc(body))
+            end
 
-        result
+            delay, msg = Alert.__at_alert_options__(;$options...)
+            if !isinf(delay) && (Dates.now() - start_time) >= Dates.Millisecond(round(Int,1000delay))
+                alert(msg)
+            end
+        end
     end
 end
 
-__at_alert_options__() = 2.0, "Done!"
-__at_alert_options__(str::AbstractString) = 2.0, str
-__at_alert_options__(num::Number) = convert(Float64,num), "Done!"
-__at_alert_options__(str::AbstractString,num::Number) = convert(Float64,num), str
-__at_alert_options__(num::Number,str::AbstractString) = convert(Float64,num), str
+function parse_alert_args(args)
+    opts = []
+    
+    i = 0
+    for outer i in 1:length(args)-1
+        if @capture(args[i], var_ = body_)
+            push!(opts, var => body)
+        else
+            break
+        end
+    end
+
+    opts, args[i+1]
+end
+
+__at_alert_options__(;duration=2.0,message="Done!",onerror=true) = duration, message, onerror
 
 """
-    alertREPL([duration=2.0], [message="Done!"])
+    alert_REPL!(;[duration=2.0], [message="Done!"])
 
-Wraps all code passed to the REPL in an `@alert` macro with the given arguments. Hence,
-if anything you run in the REPL takes longer than `duration` seconds, an alert notification
-will be displayed. You can set the duration to `Inf` to turn off the notification.
+Wraps all code passed to the REPL in an `@alert` macro with the given arguments.
+Hence, if anything you run in the REPL takes longer than `duration` seconds, an
+alert notification will be displayed. You can set the duration to `Inf` to turn
+off the notification.
+
+> NOTE: `onerror` must always be false; therefore no alert will be shown when a
+command errors. This is a limitation of REPL design. All REPL statements are
+expected to be top-level statements and inserting a `try/catch` block
+automatically would prevent the assignment of global variables at the REPL.
 """
-function alertREPL(args...)
-    repl_alert_options[] = __at_alert_options__(args...)
+function alert_REPL!(;args...)
+    if VERSION < v"1.5"
+        @error "Requires Julia 1.5 or higher"
+        return
+    end
+
+    repl_alert_options[] = __at_alert_options__(;args...)[1:2]
     dur = repl_alert_options[][1]
-    if !isinf(dur)
+    if dur !== nothing && !isinf(dur)
         secs = @sprintf("%1.2f s", repl_alert_options[][1])
         @info "Alert will be sent if REPL line takes longer than $secs to complete. See "*
-            "documentation for `Alert.alertREPL`"
+            "documentation for `Alert.alert_REPL!`"
     else
         @info "REPL alerts have been turned off."
     end
@@ -200,18 +248,22 @@ end
 
 const repl_alert_options = Ref((Inf,"Done!"))
 function with_repl_alert(ex)
-    if !isinf(repl_alert_options[][1])
+    dur = repl_alert_options[][1]
+    if dur !== nothing && !isinf(dur)
         Expr(:toplevel, quote
-            @alert $(repl_alert_options[][1]) $(repl_alert_options[][2]) $ex
+            @alert(duration=$(repl_alert_options[][1]), 
+                   message=$(repl_alert_options[][2]),
+                   onerror=false,
+                   begin; $ex; end)
         end)
     else
         ex
     end
 end
 
-function init_alertREPL()
+function init_alert_REPL!()
     if VERSION >= v"1.5"
-        pushfirst!(REPL.repl_ast_transforms, with_repl_alert)
+        push!(Base.active_repl_backend.ast_transforms, with_repl_alert)
     end
 end
 

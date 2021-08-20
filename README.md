@@ -12,13 +12,14 @@ There are three ways to use alert:
 
 1. Call `alert()` after a long-running piece of code.
 2. Put long-running code inside the `@alert` macro.
-3. Call `alertREPL` and any long-running code sent to the REPL will display a notification.
+3. Call `alert_REPL!` and any long-running code sent to the REPL will display a notification.
 
-Before using `alert()` at the end of a long-running script, it would be good to test that it
-actually works on your system: some linux distros may not have an appropriate program
-installed to display the notification. Loading `Alert` should warn you if it can't find an
-appropriate executable to send the notification. Just read the error message that is
-displayed to see what program you need to install.
+Before using `alert()` at the end of a long-running script, it would be good to
+test that it actually works on your system: some linux distros may not have an
+appropriate program installed to display the notification. Loading `Alert`
+should warn you if it can't find an appropriate executable to send the
+notification. Just read the error message that is displayed to see what program
+you need to install.
 
 Table of Contents:
 <!-- TOC -->
@@ -60,17 +61,17 @@ end
 
 ## The REPL hook
 
-In Julia 1.5 or greater, if you want any long-running command at the REPL to send a
-notification, you can use `alertREPL`. It takes the same arguments as `@alert` and will wrap
-any code passed to the Julia REPL in a call to `@alert`.
+In Julia 1.5 or greater, if you want any long-running command at the REPL to
+send a notification, you can use `alert_REPL!`. It takes the same arguments as
+`@alert` and will wrap any code passed to the Julia REPL in a call to `@alert`.
 
-You can add the following to your `startup.jl` file to have it work in every Julia
-session.
+You can add the following to your `startup.jl` file to have it work in every
+Julia session.
 
 ```julia
 try
     using Alert
-    alertREPL()
+    alert_REPL!()
 catch e
     @warn e.msg
 end
