@@ -1,4 +1,9 @@
 using Test
 using Alert
 
-@test alert() !== nothing
+# without a backend, `alert` should error
+if get(ENV,"CI",false)
+    @test_throws ErrorException alert()
+else
+    @test alert() !== nothing
+end
