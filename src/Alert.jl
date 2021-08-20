@@ -263,7 +263,7 @@ end
 
 function init_alert_REPL!()
     if VERSION >= v"1.5"
-        if @show isdefined(Base, :active_repl_backend)
+        if isdefined(Base, :active_repl_backend)
             push!(Base.active_repl_backend.ast_transforms, with_repl_alert)
         else
             pushfirst!(REPL.repl_ast_transforms, with_repl_alert)
