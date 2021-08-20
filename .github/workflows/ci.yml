@@ -27,10 +27,6 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/add-julia-registry@v1
-        with:
-          key: ${{ secrets.BEACONBUDDY_SSH_KEY }}
-          registry: beacon-biosignals/BeaconRegistry
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
