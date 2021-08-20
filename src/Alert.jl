@@ -271,6 +271,7 @@ function init_alert_REPL!()
                     sprint(showerror, e, bt)
                 end
             end
+        end
     end
 end
 
