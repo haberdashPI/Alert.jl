@@ -263,7 +263,14 @@ end
 
 function init_alert_REPL!()
     if VERSION >= v"1.5"
-        push!(Base.active_repl_backend.ast_transforms, with_repl_alert)
+        try
+            push!(Base.active_repl_backend.ast_transforms, with_repl_alert)
+        catch e
+            @error "Unable to load REPL backend for Alert: \n"*                    
+                mapreduce(*, Base.catch_stack()) do (e, bt)
+                    sprint(showerror, e, bt)
+                end
+            end
     end
 end
 
