@@ -269,7 +269,6 @@ function init_alert_REPL!()
             @error "Unable to load REPL backend for Alert: \n"*                    
                 mapreduce(*, Base.catch_stack()) do (e, bt)
                     sprint(showerror, e, bt)
-                end
             end
         end
     end
