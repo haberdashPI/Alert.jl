@@ -28,6 +28,8 @@ Table of Contents:
 - [The alert function](#the-alert-function)
 - [The @alert macro](#the-alert-macro)
 - [The REPL hook](#the-repl-hook)
+- [Changing backends](#changing-backends)
+    - [Built-in backends](#built-in-backends)
 - [Troubleshooting](#troubleshooting)
 - [Extensions](#extensions)
 
@@ -77,6 +79,15 @@ catch e
     @warn e.msg
 end
 ```
+
+## Changing backends
+
+You can implement any backend you want for `alert`. See the docstring for `Alert.set_alert_backend!` for more details.
+
+### Built-in backends
+
+- `apple_alert!` allows you to modify some UX details of the alert notification
+  on MacOS. See its docstring.
 
 ## Troubleshooting
 
