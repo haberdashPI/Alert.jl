@@ -70,5 +70,3 @@ function apple_backend(;
 
     return message -> run(`osascript -e 'display notification "'$message'"'$options''`)
 end
-
-end
