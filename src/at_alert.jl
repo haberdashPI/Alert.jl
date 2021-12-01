@@ -46,6 +46,8 @@ macro alert(args...)
             if !isinf(delay) && (Dates.now() - start_time) >= Dates.Millisecond(round(Int,1000delay))
                 alert(msg)
             end
+
+            result
         end
     end
 end
